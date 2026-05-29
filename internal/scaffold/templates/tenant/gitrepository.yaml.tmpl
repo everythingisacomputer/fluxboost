@@ -1,0 +1,13 @@
+# The tenant's own source repository. For private repos, create a git
+# credentials Secret in the {{ .Name }} namespace and add:
+#   spec.secretRef: {name: {{ .Name }}-git-auth}
+apiVersion: {{ .C.APIs.GitRepository }}
+kind: GitRepository
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Name }}
+spec:
+  interval: 1m0s
+  ref:
+    branch: {{ .Branch }}
+  url: {{ .Repo }}

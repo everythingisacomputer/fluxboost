@@ -1,0 +1,15 @@
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+spec:
+  chart:
+    spec:
+      chart: gateway
+      version: 1.24.1
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 10m0s

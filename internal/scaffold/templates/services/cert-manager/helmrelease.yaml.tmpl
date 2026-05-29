@@ -1,0 +1,66 @@
+---
+apiVersion: {{ .C.APIs.HelmRepository }}
+kind: HelmRepository
+metadata:
+  name: cert-manager
+spec:
+  interval: 10m0s
+  url: https://charts.jetstack.io/
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: cert-manager
+spec:
+  chart:
+    spec:
+      chart: cert-manager
+      version: "v1.16.2"
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: cert-manager
+  interval: 10m0s
+  values:
+    global:
+      leaderElection:
+        namespace: "cert-manager"
+    crds:
+      enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 50M
+    extraArgs:
+      - "--dns01-recursive-nameservers-only"
+{{- if eq .C.Provider "gcp" }}
+    serviceAccount:
+      annotations:
+        # Workload Identity: bind this KSA to a GSA with roles/dns.admin.
+        iam.gke.io/gcp-service-account: cert-manager@${gcloudProjectId}.iam.gserviceaccount.com
+{{- else if eq .C.Provider "aws" }}
+    serviceAccount:
+      annotations:
+        # IRSA: create an IAM role named cert-manager with Route53 access.
+        eks.amazonaws.com/role-arn: arn:aws:iam::${awsAccountId}:role/cert-manager
+{{- end }}
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: trust-manager
+spec:
+  chart:
+    spec:
+      chart: trust-manager
+      version: "v0.12.0"
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: cert-manager
+  interval: 10m0s
+  values:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 50M

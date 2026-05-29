@@ -1,0 +1,14 @@
+# Namespaces for platform workloads. Applied by the `infra` Kustomization,
+# which substitutes ${env} and friends.
+{{- range .Namespaces }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Name }}
+  labels:
+    name: {{ .Name }}
+{{- range $k, $v := .Labels }}
+    {{ $k }}: {{ $v }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,9 @@
+# Seed resource so the tenant Kustomization never builds empty. Replace
+# with the tenant's real workloads.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Name }}-tenant-info
+data:
+  tenant: {{ .Name }}
+  env: ${env}

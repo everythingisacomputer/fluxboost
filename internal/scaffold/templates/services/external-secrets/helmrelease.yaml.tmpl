@@ -1,0 +1,27 @@
+---
+apiVersion: {{ .C.APIs.HelmRepository }}
+kind: HelmRepository
+metadata:
+  name: external-secrets
+spec:
+  interval: 10m0s
+  url: https://charts.external-secrets.io
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: external-secrets
+spec:
+  # Override the release name to avoid the Namespace-Release pattern.
+  releaseName: external-secrets
+  interval: 10m0s
+  chart:
+    spec:
+      chart: external-secrets
+      version: "0.11.0"
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: external-secrets
+  values:
+    installCRDs: true

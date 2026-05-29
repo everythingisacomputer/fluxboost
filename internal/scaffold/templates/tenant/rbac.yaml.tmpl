@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Name }}
+  labels:
+    name: {{ .Name }}
+    toolkit.fluxcd.io/tenant: {{ .Name }}
+{{- if has "istiod" }}
+    istio-injection: enabled
+{{- end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Name }}
+---
+# The tenant reconciler is admin within its own namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Name }}-reconciler
+  namespace: {{ .Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Name }}
+    namespace: {{ .Name }}

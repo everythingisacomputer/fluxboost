@@ -1,0 +1,48 @@
+---
+apiVersion: {{ .C.APIs.HelmRepository }}
+kind: HelmRepository
+metadata:
+  name: istio
+spec:
+  interval: 10m0s
+  url: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: istio-base
+spec:
+  chart:
+    spec:
+      chart: base
+      version: 1.24.1
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 10m0s
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: istiod
+spec:
+  chart:
+    spec:
+      chart: istiod
+      version: 1.24.1
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 10m0s
+  dependsOn:
+    - name: istio-base
+  values:
+    meshConfig:
+      outboundTrafficPolicy:
+        mode: "ALLOW_ANY"
+    defaultResources:
+      requests:
+        cpu: 10m
+        memory: 256Mi

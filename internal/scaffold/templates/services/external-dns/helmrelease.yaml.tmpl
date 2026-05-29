@@ -1,0 +1,60 @@
+---
+apiVersion: {{ .C.APIs.HelmRepository }}
+kind: HelmRepository
+metadata:
+  name: external-dns
+spec:
+  interval: 10m0s
+  url: https://kubernetes-sigs.github.io/external-dns/
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: external-dns
+spec:
+  chart:
+    spec:
+      chart: external-dns
+      version: "1.15.0"
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+  interval: 10m0s
+  values:
+    logFormat: json
+    policy: sync
+    txtOwnerId: ${env}-cluster
+    txtPrefix: "${env}-cluster-"
+    domainFilters:
+      - ${baseDomain}
+{{- if has "gateway" }}
+    sources:
+      - service
+      - ingress
+      - istio-gateway
+      - istio-virtualservice
+{{- end }}
+{{- if eq .C.Provider "gcp" }}
+    provider:
+      name: google
+    extraArgs:
+      - --google-project=${gcloudProjectId}
+    serviceAccount:
+      create: false
+      name: external-dns
+    rbac:
+      create: false
+{{- else if eq .C.Provider "aws" }}
+    provider:
+      name: aws
+    env:
+      - name: AWS_DEFAULT_REGION
+        value: ${awsRegion}
+    serviceAccount:
+      create: true
+      name: external-dns
+      annotations:
+        # IRSA: create an IAM role named external-dns with Route53 access.
+        eks.amazonaws.com/role-arn: arn:aws:iam::${awsAccountId}:role/external-dns
+{{- end }}

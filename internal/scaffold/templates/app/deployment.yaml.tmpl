@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Name }}
+  labels:
+    app: {{ .Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Name }}
+    spec:
+      serviceAccountName: {{ .Name }}
+      containers:
+        - name: {{ .Name }}
+          image: {{ .Image }}{{ if .ImageAutomation }} # {"$imagepolicy": "flux-system:{{ .Name }}"}{{ end }}
+          ports:
+            - containerPort: {{ .Port }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi

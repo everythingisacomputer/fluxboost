@@ -1,0 +1,28 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Name }}
+  labels:
+    app: {{ .Name }}
+spec:
+  schedule: "{{ .Schedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ .Name }}
+        spec:
+          serviceAccountName: {{ .Name }}
+          restartPolicy: Never
+          containers:
+            - name: {{ .Name }}
+              image: {{ .Image }}{{ if .ImageAutomation }} # {"$imagepolicy": "flux-system:{{ .Name }}"}{{ end }}
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi

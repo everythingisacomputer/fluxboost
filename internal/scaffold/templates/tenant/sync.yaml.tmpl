@@ -1,0 +1,32 @@
+# Tenant-owned Kustomization: reconciles the tenant's app tree while
+# impersonating the tenant ServiceAccount, so it can only touch its own
+# namespace.
+apiVersion: {{ .C.APIs.Kustomize }}
+kind: Kustomization
+metadata:
+  name: {{ .Name }}-apps
+  namespace: {{ .Name }}
+spec:
+  interval: 10m0s
+{{- if .Repo }}
+  path: {{ .Path }}
+{{- else }}
+  path: ./tenants/{{ .Name }}/apps/${env}/
+{{- end }}
+  prune: true
+  serviceAccountName: {{ .Name }}
+{{- if .Repo }}
+  sourceRef:
+    kind: GitRepository
+    name: {{ .Name }}
+{{- else }}
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+{{- end }}
+  postBuild:
+    substitute:
+{{- range .C.Vars }}
+      {{ .Name }}: {{ ref .Name }}
+{{- end }}

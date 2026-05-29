@@ -1,0 +1,23 @@
+apiVersion: {{ .C.APIs.Kustomize }}
+kind: Kustomization
+metadata:
+  name: infra
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./infra/overlays/{{ .C.Env }}/
+  prune: true
+{{- if .C.Sops }}
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+{{- end }}
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  postBuild:
+    substitute:
+{{- range .C.Vars }}
+      {{ .Name }}: "{{ .Value }}"
+{{- end }}

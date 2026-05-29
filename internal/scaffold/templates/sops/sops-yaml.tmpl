@@ -1,0 +1,7 @@
+# SOPS creation rules. Encrypt secrets before committing:
+#   sops --encrypt --in-place path/to/secret.yaml
+# Flux decrypts them at apply time via the sops-age Secret in flux-system.
+creation_rules:
+  - path_regex: .*\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: {{ .Recipient }}

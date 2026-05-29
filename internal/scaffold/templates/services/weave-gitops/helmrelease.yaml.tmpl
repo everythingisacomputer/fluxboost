@@ -1,0 +1,32 @@
+---
+apiVersion: {{ .C.APIs.HelmRepository }}
+kind: HelmRepository
+metadata:
+  name: weave-gitops
+spec:
+  interval: 10m0s
+  type: oci
+  url: oci://ghcr.io/weaveworks/charts
+---
+apiVersion: {{ .C.APIs.HelmRelease }}
+kind: HelmRelease
+metadata:
+  name: weave-gitops
+spec:
+  chart:
+    spec:
+      chart: weave-gitops
+      version: "4.0.36"
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: weave-gitops
+  interval: 10m0s
+  values:
+    adminUser:
+      create: true
+      username: admin
+      # Placeholder — generate a real hash with:
+      #   gitops get bcrypt-hash
+      # `$$` escapes `$` for Flux post-build substitution.
+      passwordHash: "$$2a$$10$$CHANGE_ME_SEE_COMMENT_ABOVE"

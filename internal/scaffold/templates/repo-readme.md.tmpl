@@ -1,0 +1,62 @@
+# GitOps platform repository
+
+Scaffolded by [fluxboost](https://github.com/haney-oliver/fluxboost) for
+provider **{{ .C.Provider }}** against flux **{{ .FluxVersion }}**.
+
+## Layout
+
+```
+clusters/<env>/        Flux entry points (flux bootstrap targets clusters/<env>)
+  flux-system/         written by `flux bootstrap`
+  infra/               applies infra/overlays/<env> with substitution values
+  tenants/, apps/      wired lazily by `fluxboost tenant add` / `fluxboost app add`
+infra/
+  overlays/<env>/      namespaces + one Flux Kustomization per platform service
+  services/<svc>/      service manifests: _base/ shared, <env>/ overlay
+tenants/<name>/        tenant RBAC + tenant-owned app tree
+apps/services/<name>/  application manifests
+fluxboost.yaml         choices made at init time; read by later fluxboost commands
+```
+
+## Enabled services
+
+{{ range .Services }}- {{ . }}
+{{ end }}
+## Getting started
+
+1. Create the git remote and push this repository.
+2. Bootstrap each cluster:
+{{ range .Bootstrap }}
+   ```sh
+   # {{ .Env }}
+   {{ .Cmd }}
+   ```
+{{ end }}
+3. Point your DNS zone for `{{ .C.BaseDomain }}` at the ingress gateway
+   (or let external-dns manage records on aws/gcp).
+
+## Notes
+
+- Substitution variables (`${env}`, `${baseDomain}`, ...) are set once per
+  cluster in `clusters/<env>/infra/sync.yaml` and passed down to every
+  service via `postBuild.substitute`.
+{{- if has "weave-gitops" }}
+- weave-gitops ships with a placeholder admin password hash. Generate a real
+  one with `gitops get bcrypt-hash` and update
+  `infra/services/weave-gitops/_base/helmrelease.yaml` (escape `$` as `$$`).
+{{- end }}
+{{- if has "secret-stores" }}
+- The vault ClusterSecretStore expects a `vault-token-global` Secret in the
+  external-secrets namespace after you initialize and unseal Vault.
+{{- end }}
+{{- if eq .C.Provider "gcp" }}
+- cert-manager and external-dns assume Workload Identity bindings to GCP
+  service accounts with DNS admin on project `{{ "${gcloudProjectId}" }}`.
+{{- end }}
+{{- if eq .C.Provider "aws" }}
+- cert-manager and external-dns assume IRSA roles (`cert-manager`,
+  `external-dns`) with Route53 access.
+{{- end }}
+- Tenants get a namespace-scoped reconciler ServiceAccount. For a hard
+  multi-tenancy lockdown, also enable flux's multitenancy flags
+  (`--no-cross-namespace-refs`, `--default-service-account`).

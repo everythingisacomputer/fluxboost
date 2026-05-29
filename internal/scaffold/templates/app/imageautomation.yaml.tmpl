@@ -1,0 +1,50 @@
+# image-automation: {{ .Name }}
+# Watches the registry, picks the newest semver tag, and commits the update
+# to this repo. Lives in flux-system so exactly one instance rewrites the
+# shared _base regardless of how many environments exist.
+---
+apiVersion: {{ .C.APIs.Image }}
+kind: ImageRepository
+metadata:
+  name: {{ .Name }}
+  namespace: flux-system
+spec:
+  image: {{ .ImageRepo }}
+  interval: 5m0s
+---
+apiVersion: {{ .C.APIs.Image }}
+kind: ImagePolicy
+metadata:
+  name: {{ .Name }}
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: {{ .Name }}
+  policy:
+    semver:
+      range: ">=0.0.0"
+---
+apiVersion: {{ .C.APIs.Image }}
+kind: ImageUpdateAutomation
+metadata:
+  name: {{ .Name }}
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxbot@{{ .C.BaseDomain }}
+        name: fluxbot
+      messageTemplate: "chore({{ .Name }}): update image [skip ci]"
+    push:
+      branch: main
+  update:
+    path: ./apps/services/{{ .Name }}/_base
+    strategy: Setters

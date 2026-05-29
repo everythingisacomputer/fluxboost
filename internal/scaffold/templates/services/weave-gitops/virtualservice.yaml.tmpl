@@ -1,0 +1,19 @@
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: weave-gitops
+spec:
+  hosts:
+    - "weave.${env}.${baseDomain}"
+  gateways:
+    - "${env}/${env}"
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: weave-gitops
+            port:
+              number: 9001
