@@ -1,0 +1,34 @@
+version: 2
+
+project_name: fluxboost
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - "-s -w -X github.com/everythingisacomputer/fluxboost/cmd.version={{ .Version }}"
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats: [tar.gz]
+
+checksum:
+  name_template: checksums.txt
+
+brews:
+  - repository:
+      owner: everythingisacomputer
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/everythingisacomputer/fluxboost
+    description: Scaffold Flux GitOps repos, platform services, and tenants
+    license: MIT
+    caveats: |
+      Run `fluxboost init` in an empty directory to scaffold a GitOps repo.
+      fluxboost renders manifests for flux 2.7 - 2.9 and detects the flux
+      CLI on your PATH.
+    test: |
+      system "#{bin}/fluxboost", "version"
