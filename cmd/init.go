@@ -60,7 +60,7 @@ to plain line prompts so the same questions can be answered from a script.`,
 			if dir, err = filepath.Abs(args[0]); err != nil {
 				return err
 			}
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+			if err := os.MkdirAll(dir, 0o750); err != nil {
 				return err
 			}
 		}

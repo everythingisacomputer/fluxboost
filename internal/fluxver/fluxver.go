@@ -82,7 +82,7 @@ func Detect() (Version, error) {
 	if err != nil {
 		return Default, fmt.Errorf("flux CLI not found in PATH")
 	}
-	out, err := exec.Command(path, "--version").CombinedOutput()
+	out, err := exec.Command(path, "--version").CombinedOutput() // #nosec G204 -- running the user's own flux CLI is the point
 	if err != nil {
 		return Default, fmt.Errorf("running flux --version: %w", err)
 	}

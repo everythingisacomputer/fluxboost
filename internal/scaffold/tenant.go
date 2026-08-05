@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -11,10 +12,22 @@ import (
 	"github.com/everythingisacomputer/fluxboost/internal/config"
 )
 
+// validSegment guards path segments (tenant/app names) that callers already
+// validate at the CLI layer; scaffold enforces it again so no caller can
+// smuggle path separators into generated paths.
+var validSegment = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`)
+
+func checkSegment(kind, name string) error {
+	if !validSegment.MatchString(name) {
+		return fmt.Errorf("invalid %s name %q", kind, name)
+	}
+	return nil
+}
+
 // ensureResource makes sure a kustomization.yaml lists the given resource,
 // creating the file if needed.
 func ensureResource(res *Result, path, resource string) error {
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(filepath.Clean(path)) // #nosec G304 -- path is inside the repo fluxboost was invoked on
 	if os.IsNotExist(err) {
 		content := fmt.Sprintf("apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources:\n  - %s\n", resource)
 		return writeFile(res, path, []byte(content), false)
@@ -44,7 +57,7 @@ func ensureResource(res *Result, path, resource string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(path, out, 0o644); err != nil {
+	if err := os.WriteFile(path, out, 0o600); err != nil {
 		return err
 	}
 	res.Written = append(res.Written, path)
@@ -54,7 +67,7 @@ func ensureResource(res *Result, path, resource string) error {
 // appendBlock appends a rendered YAML block to a sync.yaml, creating it with
 // a header when missing. Refuses to append twice for the same marker.
 func appendBlock(res *Result, path, header, marker string, block []byte) error {
-	existing, err := os.ReadFile(path)
+	existing, err := os.ReadFile(filepath.Clean(path)) // #nosec G304 -- path is inside the repo fluxboost was invoked on
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -71,10 +84,11 @@ func appendBlock(res *Result, path, header, marker string, block []byte) error {
 		}
 	}
 	out = append(out, block...)
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return err
 	}
-	if err := os.WriteFile(path, out, 0o644); err != nil {
+	// #nosec G703 -- path segments are validated by checkSegment before use
+	if err := os.WriteFile(path, out, 0o600); err != nil {
 		return err
 	}
 	res.Written = append(res.Written, path)
@@ -102,6 +116,9 @@ func ensureClusterSync(res *Result, repoPath, kind string, ctx *Ctx) error {
 // A tenant with Repo set reconciles its apps from its own git repository
 // instead of the platform repo.
 func AddTenant(res *Result, repoPath string, t config.Tenant, ctx *Ctx) error {
+	if err := checkSegment("tenant", t.Name); err != nil {
+		return err
+	}
 	if err := ensureClusterSync(res, repoPath, "tenants", ctx); err != nil {
 		return err
 	}
@@ -164,6 +181,9 @@ func AddTenant(res *Result, repoPath string, t config.Tenant, ctx *Ctx) error {
 
 // AddApp scaffolds apps/services/<name> and registers it for one environment.
 func AddApp(res *Result, repoPath string, app config.App, ctx *Ctx) error {
+	if err := checkSegment("app", app.Name); err != nil {
+		return err
+	}
 	if app.Type == "" {
 		app.Type = "deployment"
 	}

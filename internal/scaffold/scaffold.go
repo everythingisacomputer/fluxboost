@@ -117,10 +117,10 @@ func writeFile(res *Result, path string, content []byte, force bool) error {
 			return fmt.Errorf("%s already exists", path)
 		}
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return err
 	}
-	if err := os.WriteFile(path, content, 0o644); err != nil {
+	if err := os.WriteFile(path, content, 0o600); err != nil {
 		return err
 	}
 	res.Written = append(res.Written, path)
