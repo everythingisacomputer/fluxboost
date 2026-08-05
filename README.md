@@ -29,6 +29,8 @@ Environment-specific values (`${env}`, `${baseDomain}`, provider ids) are set
 once per cluster and flow down through Flux `postBuild.substitute` — services
 and apps reference them symbolically.
 
+![fluxboost init demo: the wizard collects domain, platform, credentials, profile, and SOPS choices, then scaffolds the repo](demo-init.gif)
+
 ## Install
 
 With Homebrew (macOS or Linux):
@@ -83,6 +85,8 @@ kubectl -n flux-system create secret generic sops-age --from-file=age.agekey=age
 ```
 
 ## Growing the repo
+
+![fluxboost tenant add demo: adding a tenant scaffolds the namespace, scoped RBAC, and tenant-owned reconciler](demo-tenant.gif)
 
 ```sh
 # New environment: scaffolds clusters/<env> + overlays and re-registers
