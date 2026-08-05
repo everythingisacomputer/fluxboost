@@ -1,5 +1,10 @@
 # fluxboost
 
+[![ci](https://github.com/everythingisacomputer/fluxboost/actions/workflows/ci.yml/badge.svg)](https://github.com/everythingisacomputer/fluxboost/actions/workflows/ci.yml)
+[![release](https://github.com/everythingisacomputer/fluxboost/actions/workflows/release.yml/badge.svg)](https://github.com/everythingisacomputer/fluxboost/actions/workflows/release.yml)
+[![latest release](https://img.shields.io/github/v/release/everythingisacomputer/fluxboost)](https://github.com/everythingisacomputer/fluxboost/releases/latest)
+[![buy me a coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-☕-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/everythingisacomputer)
+
 Scaffold [Flux](https://fluxcd.io) GitOps repositories with opt-in platform
 services, SOPS secrets encryption, and namespace-scoped tenants, for **AWS**,
 **GCP**, and **bare metal** clusters.
@@ -26,9 +31,17 @@ and apps reference them symbolically.
 
 ## Install
 
+With Homebrew (macOS or Linux):
+
 ```sh
-brew install everythingisacomputer/tap/fluxboost
-# or
+brew tap everythingisacomputer/tap
+brew trust everythingisacomputer/tap   # newer Homebrew requires trusting third-party taps
+brew install fluxboost
+```
+
+Or with Go:
+
+```sh
 go install github.com/everythingisacomputer/fluxboost@latest
 ```
 
@@ -132,3 +145,8 @@ range.
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Support
+
+If fluxboost saves you time, you can
+[buy me a coffee](https://buymeacoffee.com/everythingisacomputer). ☕
